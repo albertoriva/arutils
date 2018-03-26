@@ -1,0 +1,21 @@
+#!/bin/bash
+
+WHEREISNANO=/bin/nano
+NANOTEMPLATES=~/.nano-templates/
+
+filename=$1
+echo $filename
+
+if [ ! -f $filename ];
+then
+    ext=${filename##*.}
+    template="$NANOTEMPLATES/$ext"
+    echo Using template: $template
+    if [ -f $template ];
+    then
+	cp $template $filename
+    fi
+fi
+$WHEREISNANO $filename
+
+
