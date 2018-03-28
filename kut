@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+
+import sys
+import csv
+
+def parseColumns(a):
+    cols = []
+    for w in a.split(","):
+        w = w.strip()
+        try:
+            x = int(w)
+            cols.append(x-1)
+        except ValueError:
+            pass
+    return cols
+
+class Kutter():
+    infiles = []
+    columns = []
+    delimiter = '\t'
+    quotechar = None
+
+    def __init__(self):
+        self.infiles = []
+        self.columns = []
+
+    def parseArgs(self, args):
+        prev = ""
+        for a in args:
+            if prev == "-f":
+                self.columns = parseColumns(a)
+                prev = ""
+            elif prev == "-d":
+                self.delimiter = a
+                prev = ""
+            elif prev == "-q":
+                self.quotechar = a
+                prev = ""
+            elif a in ["-f", "-d", "-q"]:
+                prev = a
+            else:
+                self.infiles.append(a)
+        
+    def describe(self):
+        sys.stdout.write("""Columns: {}
+Delimiter: {}
+Quotechar: {}
+Filenames: {}
+""".format(",".join(self.columns), self.delimiter, self.quotechar, self.infiles))
+
+    def readfile(self, f):
+        r = csv.reader(f, delimiter=self.delimiter, quotechar=self.quotechar)
+        for row in r:
+            outrow = [row[c] for c in self.columns]
+            sys.stdout.write("\t".join(outrow) + "\n")
+
+if __name__ == "__main__":
+    K = Kutter()
+    K.parseArgs(sys.argv[1:])
+    #K.describe()
+    if K.infiles:
+        for filename in K.infiles:
+            with open(filename, "r") as f:
+                K.readfile(f)
+    else:
+        K.readfile(sys.stdin)
