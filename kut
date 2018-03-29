@@ -41,7 +41,9 @@ class Kutter():
     columns = []
     delimiter = '\t'
     quotechar = None
-
+    missing = "???"
+    ncols = 0
+    
     def __init__(self):
         self.infiles = []
         self.columns = []
@@ -51,16 +53,19 @@ class Kutter():
 
 Usage: kut [options] filenames...
 
-This command extracts columns from the specified files and prints them to
-standard output. Wanted columns are specified using the -f option, and 
-are printed in the order in which they are specified (contrast this with the
-cut command, which always prints them in their original order).
+This command extracts columns from the specified files (or standard input
+if no filenames are specified) and prints them to standard output. Wanted 
+columns are specified using the -f option, and are printed in the order in 
+which they are specified (contrast this with the cut command, which always 
+prints them in their original order).
 
 Options:
 
- -f C1,C2,...,Cn | Specifies wanted columns. See below for possible values for C.
- -d D            | Set delimiter to D (default: tab)
- -q Q            | Set quote character to Q (default: None)
+ -f C1,...,Cn | Specifies wanted columns. See below for possible values for C.
+ -d D         | Set delimiter to D (default: tab).
+ -q Q         | Set quote character to Q (default: None).
+ -m M         | Use M in place of missing values, e.g. if a line is shorter 
+                than the rest (default: '???').
 
 Each column specification C can be:
 
@@ -72,8 +77,15 @@ Each column specification C can be:
  The string '-', interpreted as all columns in reverse order.
 
 Note that in a range p-q, p can be larger than q, and that columns
-can be repeated. Some examples:
+can be repeated. Some examples, assuming that file test.csv has five columns:
 
+kut -f 1,5,3 test.csv   - Columns 1, 5, and 3 in this order
+kut -f 2-4 test.csv     - Columns 2, 3, and 4
+kut -f -2 test.csv      - Columns 1 and 2
+kut -f 2- test.csv      - Columns 2, 3, 4, and 5
+kut -f 3-1 test.csv     - Columns 3, 2, and 1
+kut -f 3-1,2-4 test.csv - Columns 3, 2, 1, 2, 3, and 4.
+kut -f - test.csv       - Columns 5, 4, 3, 2, and 1
 
 """)
         
@@ -92,7 +104,10 @@ can be repeated. Some examples:
             elif prev == "-q":
                 self.quotechar = a
                 prev = ""
-            elif a in ["-f", "-d", "-q"]:
+            elif prev == "-m":
+                self.missing = a
+                prev = ""
+            elif a in ["-f", "-d", "-q", "-m"]:
                 prev = a
             else:
                 self.infiles.append(a)
@@ -107,7 +122,7 @@ Filenames: {}
 
     def realColumns(self, row):
         wcols = []
-        ncols = len(row) - 1
+        ncols = self.rowlen - 1
         for c in self.columns:
             if type(c).__name__ == "tuple":
                 (a, b) = c
@@ -125,14 +140,21 @@ Filenames: {}
             else:
                 wcols.append(c)
         return wcols
-        
+
+    def safeGetField(self, row, c):
+        try:
+            return row[c]
+        except IndexError:
+            return self.missing
+    
     def readfile(self, f):
         wcolumns = None
         r = csv.reader(f, delimiter=self.delimiter, quotechar=self.quotechar)
         for row in r:
             if not wcolumns:
+                self.rowlen = len(row)
                 wcolumns = self.realColumns(row)
-            outrow = [row[c] for c in wcolumns]
+            outrow = [self.safeGetField(row, c) for c in wcolumns]
             sys.stdout.write("\t".join(outrow) + "\n")
 
 if __name__ == "__main__":
