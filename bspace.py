@@ -6,9 +6,9 @@ import subprocess
 
 # bs download run --name millerlab1 -o test
 
-COMMANDS = ["list", "meta", "info", "initdir", "initall"]
+COMMANDS = ["list", "meta", "info", "initdir", "alldir"]
 
-class BSCaller():
+class BSClient():
     command = None
     args = []
 
@@ -101,8 +101,13 @@ Where command is one of: {}
     def main(self):
         if self.command == "list":
             self.getAllRuns(show=True)
+        elif self.command == "initdir":
+            for name in self.args:
+                self.initializeDirectory(name)
+        elif self.command == "alldir":
+            self.initializeAllDirectories()
 
 if __name__ == "__main__":
-    B = BSCaller()
+    B = BSClient()
     if B.parseArgs(sys.argv[1:]):
         B.main()
