@@ -75,6 +75,7 @@ Where command is one of: {}
         ri = self.getRunInfo(name)
         self.writeRunInfo(name + "/runInfo.csv", ri)
         self.writeMeta(name + "/META", ri)
+        os.mkdir(name + "/fastq")
 
     def getAllRuns(self, show=False):
         if show:
