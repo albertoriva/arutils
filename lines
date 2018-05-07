@@ -1,0 +1,30 @@
+#!/bin/bash
+
+usage() {
+  echo Usage:
+  echo "  lines filename N    - print line N"
+  echo "  lines filename N M  - print lines from N to M"
+  echo "  lines filename N +L - print L lines starting at N"
+}
+
+from=$2
+to=$3
+
+if [ "$from" == "" ];
+then
+  usage
+  exit 1
+fi
+
+case $to in
+  "")
+    tail -n +${from} $1 | head -n 1
+    ;;
+  +*)
+    tail -n +${from} $1 | head -n $to
+    ;;
+  *)
+    n=$(($to - $from + 1))
+    tail -n +${from} $1 | head -n $n
+esac
+
