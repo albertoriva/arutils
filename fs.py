@@ -56,7 +56,7 @@ Options:
                 self.recurse = True
             elif a == "-t":
                 self.totonly = True
-            elif a == "-s":
+            elif a == "-s" or a == "-":
                 fromStdin = True
                 self.fromStdin()
             else:
@@ -70,7 +70,7 @@ Options:
         while True:
             f = sys.stdin.readline()
             if f:
-                self.files.append(f.rstrip("\r\n"))
+                self.files.append(f.strip())
             else:
                 return
 
@@ -109,7 +109,7 @@ Options:
                 if os.path.exists(fl):
                     with open(fl, "r") as flin:
                         for fname in flin:
-                            total += self.write_size(fname.rstrip("\r\n"), prefix)
+                            total += self.write_size(fname.strip(), prefix)
             elif not os.path.exists(f): # File does not exist?
                 psize = "???"
             elif not os.path.isfile(f): # Is it a directory?
