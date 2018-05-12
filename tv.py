@@ -238,7 +238,9 @@ While displaying a file, the following keys can be used:
   +/-        | increase, decrease gap between columns
   q, Q       | quit
 
-""")
+(c) 2018, A. Riva, ICBR Bioinformatics Core, University of Florida
+
+""".format(TDFile.maxrows))
 
 if __name__ == "__main__":
     global FILE
