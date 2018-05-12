@@ -207,7 +207,7 @@ def parseArgs(args):
             TDFile.maxrows = int(a)
             prev = ""
         elif prev == "-d":
-            TDfile.delimiter = decodeDelimiter(a)
+            TDFile.delimiter = decodeDelimiter(a)
             prev = ""
         elif a in ["-m", "-d"]:
             prev = a
