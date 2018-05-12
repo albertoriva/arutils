@@ -24,6 +24,7 @@ class TDFile():
         if not self.delim:
             self.delim = self.detectDelimiter()
         rows_read = 0
+        self.data = []
         with open(self.filename, "r") as f:
             for line in f:
                 parsed = line.rstrip("\r\n").split(self.delim)
@@ -38,7 +39,8 @@ class TDFile():
                 rows_read += 1
                 if rows_read >= self.maxrows:
                     break
-        # print (self.nrows, self.ncols, self.colsizes)
+        self.row = 0
+        self.col = 0
 
     def detectDelimiter(self):
         hits = {'\t': 0, ',': 0, ';': 0, ':': 0}
@@ -121,6 +123,16 @@ class TDFile():
     def bottom(self):
         self.row = self.nrows - 1
 
+    def pageup(self, win):
+        (h, w) = win.getmaxyx()
+        if self.row >= h:
+            self.row -= h
+
+    def pagedown(self, win):
+        (h, w) = win.getmaxyx()
+        if self.row + h < self.nrows:
+            self.row += h
+
     def askRow(self, win):
         (h, w) = win.getmaxyx()
         win.move(h-1, 0)
@@ -157,66 +169,12 @@ class TDFile():
         except ValueError:
             pass
 
-def run(win):
-    curses.curs_set(0)
-    while True:
-        FILE.display(win)
-        a = win.getch()
-        if a in [113, 81]:      # Quit (q, Q)
-            break
-        elif a == curses.KEY_RIGHT:
-            FILE.right()
-        elif a == curses.KEY_LEFT:
-            FILE.left()
-        elif a == curses.KEY_UP:
-            FILE.up()
-        elif a == curses.KEY_DOWN:
-            FILE.down()
-        elif a == curses.KEY_HOME:
-            FILE.top()
-        elif a == curses.KEY_END:
-            FILE.bottom()
-        elif a == ord('r'):
-            FILE.askRow(win)
-        elif a == ord('c'):
-            FILE.askColumn(win)
-        elif a == ord('+'):
-            FILE.gap += 1
-        elif a == ord('-'):
-            if FILE.gap > 0:
-                FILE.gap -= 1
-        elif a == ord('h'):
-            FILE.header = not FILE.header
-        elif a == 350:       # Keypad 5
-            FILE.col = 0
-            FILE.top()
-
 def decodeDelimiter(a):
     if a == 'tab':
         return '\t'
     else:
         return a
     
-def parseArgs(args):
-    if "-h" in args:
-        return []
-    prev = ""
-    filenames = []
-    for a in args:
-        if prev == "-m":
-            TDFile.maxrows = int(a)
-            prev = ""
-        elif prev == "-d":
-            TDFile.delimiter = decodeDelimiter(a)
-            prev = ""
-        elif a in ["-m", "-d"]:
-            prev = a
-        elif a == '-b':
-            TDFile.header = True
-        else:
-            filenames.append(a)
-    return filenames
-
 def usage():
     sys.stdout.write("""tv.py - viewer for delimited files
 
@@ -242,19 +200,101 @@ While displaying a file, the following keys can be used:
 
 """.format(TDFile.maxrows))
 
-if __name__ == "__main__":
-    global FILE
-    filenames = parseArgs(sys.argv[1:])
-    nf = 1
-    totf = len(filenames)
-    if filenames:
-        for filename in filenames:
-            FILE = TDFile(filename)
-            if totf == 1:
-                FILE.label = filename
+class Driver():
+    files = []
+    nfiles = 0
+    current = 0
+    quitting = False
+
+    def __init__(self, args):
+        self.parseArgs(args)
+
+    def parseArgs(self, args):
+        if "-h" in args:
+            return
+        prev = ""
+        for a in args:
+            if prev == "-m":
+                TDFile.maxrows = int(a)
+                prev = ""
+            elif prev == "-d":
+                TDFile.delimiter = decodeDelimiter(a)
+                prev = ""
+            elif a in ["-m", "-d"]:
+                prev = a
+            elif a == '-b':
+                TDFile.header = True
             else:
-                FILE.label = "{} ({}/{})".format(filename, nf, totf)
-            wrapper(run)
-            nf += 1
+                self.files.append([a, None])
+        self.nfiles = len(self.files)
+
+    def displayAll(self, win):
+        while True:
+            pfile = self.files[self.current]
+            filename = pfile[0]
+            if not pfile[1]:
+                pfile[1] = TDFile(filename)
+            tdf = pfile[1]
+            if self.nfiles == 1:
+                tdf.label = filename
+            else:
+                tdf.label = "{} [{}/{}]".format(filename, self.current + 1, self.nfiles)
+            self.run(win, tdf)
+            if self.quitting:
+                return
+
+    def run(self, win, tdf):
+        curses.curs_set(0)
+        while True:
+            tdf.display(win)
+            a = win.getch()
+            if a in [113, 81]:      # Quit (q, Q)
+                self.quitting = True
+                break
+            elif a == ord('n'):
+                self.current += 1
+                if self.current == self.nfiles:
+                    self.current -= 1
+                else:
+                    break
+            elif a == ord('p'):
+                if self.current > 0:
+                    self.current -= 1
+                    break
+            elif a == curses.KEY_RIGHT:
+                tdf.right()
+            elif a == curses.KEY_LEFT:
+                tdf.left()
+            elif a == curses.KEY_UP:
+                tdf.up()
+            elif a in [curses.KEY_DOWN, ord('\n')]:
+                tdf.down()
+            elif a == curses.KEY_HOME:
+                tdf.top()
+            elif a == curses.KEY_END:
+                tdf.bottom()
+            elif a == curses.KEY_PPAGE:
+                tdf.pageup(win)
+            elif a in [curses.KEY_NPAGE, 32]:
+                tdf.pagedown(win)
+            elif a == ord('r'):
+                tdf.askRow(win)
+            elif a == ord('c'):
+                tdf.askColumn(win)
+            elif a == ord('+'):
+                tdf.gap += 1
+            elif a == ord('-'):
+                if tdf.gap > 0:
+                    tdf.gap -= 1
+            elif a == ord('h'):
+                tdf.header = not tdf.header
+            elif a == 350:       # Keypad 5
+                tdf.col = 0
+                tdf.top()
+
+if __name__ == "__main__":
+    D = Driver(sys.argv[1:])
+    if D.nfiles > 0:
+        wrapper(D.displayAll)
     else:
        usage()     
