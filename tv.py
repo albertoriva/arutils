@@ -28,10 +28,12 @@ class TDFile():
         with open(self.filename, "r") as f:
             for line in f:
                 parsed = line.rstrip("\r\n").split(self.delim)
+                ll = len(parsed)
                 self.nrows += 1
                 if self.colsizes:
                     for i in range(self.ncols):
-                        self.colsizes[i] = max(self.colsizes[i], len(parsed[i]))
+                        if i < ll:
+                            self.colsizes[i] = max(self.colsizes[i], len(parsed[i]))
                 else:
                     self.ncols = len(parsed)
                     self.colsizes = [len(w) for w in parsed]
@@ -59,11 +61,13 @@ class TDFile():
 
     def writeLine(self, win, ypos, w, rdata, attr):
         xpos = 0
+        l = len(rdata)
         c = self.col
         while True:
             if xpos + self.colsizes[c] >= w:
                 break
-            win.addstr(rdata[c], attr)
+            if c < l:
+                win.addstr(rdata[c], attr)
             xpos += self.colsizes[c] + self.gap
             if xpos >= w:
                 break
@@ -96,7 +100,9 @@ class TDFile():
                 break
             win.move(ypos, xpos)
         win.move(maxrow, 0)
-        win.addstr("{} | Row: {} Col: {}".format(self.label, self.row + 1, self.col + 1), curses.A_BOLD)
+        win.addstr("Row: {}/{} Col: {}/{}".format(self.row + 1, self.nrows, self.col + 1, self.ncols), curses.A_BOLD)
+        win.move(maxrow, w - len(self.label) - 1)
+        win.addstr(self.label, curses.A_BOLD)
         win.refresh()
 
     def left(self):
