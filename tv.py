@@ -180,7 +180,7 @@ def decodeDelimiter(a):
         return '\t'
     else:
         return a
-    
+
 def usage():
     sys.stdout.write("""tv.py - viewer for delimited files
 
@@ -197,7 +197,7 @@ While displaying a file, the following keys can be used:
   Enter       | move down
   Home, End   | go to top or bottom of file respectively
   PgUp        | move up one page
-  PgDn, Space |  move down one page
+  PgDn, Space | move down one page
   keypad '5'  | go to first line, first column
   r           | prompt for row number, jump to it
   c           | prompt for column number, jump to it
