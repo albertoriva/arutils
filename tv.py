@@ -187,14 +187,19 @@ Options:
 
 While displaying a file, the following keys can be used:
 
-  arrow keys | move up, down, left, right
-  Home, End  | go to top or bottom of file respectively
-  keypad '5' | go to first line, first column
-  r          | prompt for row number, jump to it
-  c          | prompt for column number, jump to it
-  h          | toggle header mode
-  +/-        | increase, decrease gap between columns
-  q, Q       | quit
+  arrow keys  | move up, down, left, right
+  Enter       | move down
+  Home, End   | go to top or bottom of file respectively
+  PgUp        | move up one page
+  PgDn, Space |  move down one page
+  keypad '5'  | go to first line, first column
+  r           | prompt for row number, jump to it
+  c           | prompt for column number, jump to it
+  h           | toggle header mode
+  n           | jump to next file
+  p           | jump to previous file
+  +/-         | increase, decrease gap between columns
+  q, Q        | quit
 
 (c) 2018, A. Riva, ICBR Bioinformatics Core, University of Florida
 
