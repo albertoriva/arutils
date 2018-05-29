@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import csv
 import time
 import curses
 from curses.wrapper import wrapper
@@ -9,6 +10,7 @@ class TDFile():
     filename = None
     label = ""
     delim = None
+    quotechar = None
     data = []
     nrows = 0
     ncols = 0
@@ -21,13 +23,13 @@ class TDFile():
     
     def __init__(self, filename):
         self.filename = filename
-        if not self.delim:
+        if self.delim is None:
             self.delim = self.detectDelimiter()
         rows_read = 0
         self.data = []
         with open(self.filename, "r") as f:
-            for line in f:
-                parsed = line.rstrip("\r\n").split(self.delim)
+            c = self.openReader(f)
+            for parsed in c:
                 ll = len(parsed)
                 self.nrows += 1
                 if self.colsizes:
@@ -44,6 +46,12 @@ class TDFile():
         self.row = 0
         self.col = 0
 
+    def openReader(self, f):
+        if self.delim == ',':
+            return csv.reader(f, delimiter=self.delim, quotechar='"')
+        else:
+            return csv.reader(f, delimiter=self.delim)
+        
     def detectDelimiter(self):
         hits = {'\t': 0, ',': 0, ';': 0, ':': 0}
         with open(self.filename, "r") as f:
@@ -57,6 +65,7 @@ class TDFile():
         for (ch, count) in hits.iteritems():
             if count > bestc:
                 best = ch
+                bestc = count
         return best
 
     def writeLine(self, win, ypos, w, rdata, attr):
@@ -64,10 +73,14 @@ class TDFile():
         l = len(rdata)
         c = self.col
         while True:
-            if xpos + self.colsizes[c] >= w:
+            if c >= l:
                 break
-            if c < l:
-                win.addstr(rdata[c], attr)
+            toDisplay = rdata[c]
+            if xpos + self.colsizes[c] >= w:
+                av = w - xpos - 2
+                if len(toDisplay) > av:
+                    toDisplay = toDisplay[:av] + " >"
+            win.addstr(toDisplay, attr)
             xpos += self.colsizes[c] + self.gap
             if xpos >= w:
                 break
@@ -229,7 +242,8 @@ class Driver():
                 TDFile.maxrows = int(a)
                 prev = ""
             elif prev == "-d":
-                TDFile.delimiter = decodeDelimiter(a)
+                TDFile.delim = decodeDelimiter(a)
+                #print "decoded: <{}>".format(TDFile.delimiter)
                 prev = ""
             elif a in ["-m", "-d"]:
                 prev = a
