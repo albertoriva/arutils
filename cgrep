@@ -1,0 +1,14 @@
+#!/bin/bash
+
+WHAT=$1
+COL=$2
+shift
+shift
+
+if [ "$WHAT" == "" ];
+then
+  echo Usage: cgrep what column files...
+else
+  CMD="\$${COL}==\"$WHAT\""
+  awk "$CMD" $*
+fi
