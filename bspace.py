@@ -6,7 +6,7 @@ import subprocess
 
 # bs download run --name millerlab1 -o test
 
-COMMANDS = ["list", "meta", "info", "initdir", "all"]
+COMMANDS = ["list", "meta", "info", "initdir", "all", "api"]
 
 class BSClient():
     command = None
@@ -31,7 +31,7 @@ Usage: bspace.py command arguments...
 
 Where command is one of: {}
 
-""".format(",".join(COMMANDS)))
+""".format(", ".join(COMMANDS)))
 
     def callBS(self, arguments, csv=True):
         """Low-level method to call bs with the supplied arguments, adding the flag for csv output
@@ -99,6 +99,9 @@ Where command is one of: {}
             self.initializeDirectory(name)
             sys.stderr.write("done.\n")
 
+    def callAPI(self):
+        print self.callBS(self.args)
+
     def main(self):
         if self.command == "list":
             self.getAllRuns(show=True)
@@ -107,6 +110,8 @@ Where command is one of: {}
                 self.initializeDirectory(name)
         elif self.command == "all":
             self.initializeAllDirectories()
+        elif self.command == "api":
+            self.callAPI()
 
 if __name__ == "__main__":
     B = BSClient()

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+OPTS=""
+FILES=""
+
+for a in $*;
+do
+  case $a in
+  -*)
+    OPTS="$OPTS $a"
+    ;;
+  *)
+    FILES="$FILES $a"
+    ;;
+  esac
+done
+
+#echo $OPTS
+#echo $FILES
+
+for f in $FILES;
+do
+  zcat $f | head $OPTS
+done

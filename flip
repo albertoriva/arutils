@@ -1,0 +1,13 @@
+#!/bin/bash
+
+prog=$(basename $0)
+if [ "$prog" == "flip" ];
+then
+  tr '\t' '\n'
+elif [ "$prog" == "cflip" ];
+then
+  tr ',' '\n'
+else
+  tr '\n' '\t'
+fi
+
