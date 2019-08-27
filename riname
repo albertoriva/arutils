@@ -97,7 +97,10 @@ if __name__ == "__main__":
         usage()
     else:
         R = Renamer(sys.argv[1:])
-        if R.before:
+        if "/" in R.after:
+            sys.stderr.write("Error: replacement string cannot contain `/'.\n")
+            sys.exit(1)
+        elif R.before:
             R.run()
         else:
             usage()
