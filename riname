@@ -1,0 +1,104 @@
+#!/usr/bin/env python
+
+import sys
+import os
+import os.path
+
+class Renamer(object):
+    before = ""
+    beforel = 0
+    after = ""
+    files = []
+    dry = False
+    force = False
+    delete = False
+    verbose = False
+    
+    def __init__(self, args):
+        trueargs = []
+        for a in args:
+            if a == "-x":
+                self.delete = True
+            elif a == "-f":
+                self.force = True
+            elif a == "-v":
+                self.verbose = True
+            elif a == "-m":
+                self.dry = True
+            else:
+                trueargs.append(a)
+        if trueargs:
+            self.before = trueargs[0]
+            self.beforel = len(self.before)
+            if self.delete:
+                self.files = trueargs[1:]
+            else:
+                self.after = trueargs[1]
+                self.files = trueargs[2:]
+            
+    def run(self):
+        for src in self.files:
+            if not self.dry and not os.path.isfile(src):
+                sys.stderr.write("Error: file `{}' does not exist.\n".format(src))
+                continue
+            (path, filename) = os.path.split(src)
+            if path:
+                path = path + "/"
+            p = filename.find(self.before)
+            if p < 0:
+                continue
+            dst = path + filename[:p] + self.after + filename[p+self.beforel:]
+            if self.verbose:
+                sys.stderr.write("{} => {}\n".format(src, dst))
+            if self.dry:
+                sys.stdout.write("mv {} {}\n".format(src, dst))
+            else:
+                if os.path.isfile(dst):
+                    if self.force:
+                        sys.stderr.write("Warning: overwriting existing file `{}'.\n".format(dst))
+                        os.rename(src, dst)
+                    else:
+                        sys.stderr.write("Cannot rename `{}' to `{}' because destination file exists.\n".format(src, dst))
+                else:
+                    os.rename(src, dst)
+
+def usage():
+    sys.stdout.write("""riname - rename files 
+
+Usage: riname [options] before after files...
+       riname -x [options] before files...
+
+This command renames `files' replacing the first occurrence of `before' in each
+filename with `after'. If -x is specified, it will remove the `before' string
+from each filename.
+
+If renaming a file would result in deleting an existing file, riname will print
+refuse to do it, unless -f is specified (in which case it will print a warning).
+
+If -m is specified, instead of renaming files riname prints to standard output
+the mv commands that would produce the same effect. These commands can be written
+to a file to be executed repeatedly.
+
+Options:
+
+  -h, --help | Print this message.
+  -v         | Show which files get renamed, and to what.
+  -f         | Force overwriting of existing files.
+  -x         | Remove supplied string instead of replacing it.
+  -m         | Print equivalent `mv' commands to standard output.
+                    
+(c) 2019, A.Riva, ICBR Bioinformatics Core, University of Florida
+
+""")
+                      
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    if "-h" in args or "--help" in args:
+        usage()
+    else:
+        R = Renamer(sys.argv[1:])
+        if R.before:
+            R.run()
+        else:
+            usage()
+            
