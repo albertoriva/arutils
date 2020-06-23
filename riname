@@ -11,18 +11,18 @@ class Renamer(object):
     files = []
     dry = False
     force = False
-    delete = False
-    verbose = False
+    mode = "c"                  # c=change, x=delete, a=prepend, b=append
+    verbose = True
     
     def __init__(self, args):
         trueargs = []
         for a in args:
-            if a == "-x":
-                self.delete = True
+            if a in ["-x", "-a", "-b"]:
+                self.mode = a[1]
             elif a == "-f":
                 self.force = True
-            elif a == "-v":
-                self.verbose = True
+            elif a == "-q":
+                self.verbose = False
             elif a == "-m":
                 self.dry = True
             else:
@@ -30,12 +30,12 @@ class Renamer(object):
         if trueargs:
             self.before = trueargs[0]
             self.beforel = len(self.before)
-            if self.delete:
-                self.files = trueargs[1:]
-            else:
+            if self.mode in "c":
                 self.after = trueargs[1]
                 self.files = trueargs[2:]
-            
+            else:
+                self.files = trueargs[1:]
+
     def run(self):
         for src in self.files:
             if not self.dry and not os.path.isfile(src):
@@ -44,10 +44,15 @@ class Renamer(object):
             (path, filename) = os.path.split(src)
             if path:
                 path = path + "/"
-            p = filename.find(self.before)
-            if p < 0:
-                continue
-            dst = path + filename[:p] + self.after + filename[p+self.beforel:]
+            if self.mode == "a":
+                dst = path + self.before + src
+            elif self.mode == "b":
+                dst = path + src + self.before
+            else:
+                p = filename.find(self.before)
+                if p < 0:
+                    continue
+                dst = path + filename[:p] + self.after + filename[p+self.beforel:]
             if self.verbose:
                 sys.stderr.write("{} => {}\n".format(src, dst))
             if self.dry:
@@ -66,14 +71,14 @@ def usage():
     sys.stdout.write("""riname - rename files 
 
 Usage: riname [options] before after files...
-       riname -x [options] before files...
+       riname -x|-a|-b [options] before files...
 
 This command renames `files' replacing the first occurrence of `before' in each
 filename with `after'. If -x is specified, it will remove the `before' string
 from each filename.
 
-If renaming a file would result in deleting an existing file, riname will print
-refuse to do it, unless -f is specified (in which case it will print a warning).
+If renaming a file would result in deleting an existing file, riname will refuse 
+to do it, unless -f is specified (in which case it will print a warning).
 
 If -m is specified, instead of renaming files riname prints to standard output
 the mv commands that would produce the same effect. These commands can be written
@@ -82,10 +87,12 @@ to a file to be executed repeatedly.
 Options:
 
   -h, --help | Print this message.
-  -v         | Show which files get renamed, and to what.
+  -q         | Quiet mode: do not show which files get renamed, and to what.
   -f         | Force overwriting of existing files.
   -x         | Remove supplied string instead of replacing it.
-  -m         | Print equivalent `mv' commands to standard output.
+  -a         | Prepend supplied string to each filename.
+  -b         | Append supplied string to each filename.
+  -m         | Do not rename, but print equivalent `mv' commands to standard output.
                     
 (c) 2019, A.Riva, ICBR Bioinformatics Core, University of Florida
 
