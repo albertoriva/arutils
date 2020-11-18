@@ -85,19 +85,19 @@ Options:
                 psize = size
 
             if self.csv:
-                print "{0}\t{1}".format(psize, prefix + os.path.basename(f))
+               sys.stdout.write("{0}\t{1}\n".format(psize, prefix + os.path.basename(f)))
             elif self.totonly:
                 pass
             else:
-                print "{0:>12} {1}".format(psize, prefix + os.path.basename(f))
+                sys.stdout.write("{0:>12} {1}\n".format(psize, prefix + os.path.basename(f)))
             return size
         except:
             if self.csv:
-                print "???\t{0}".format(prefix + os.path.basename(f))
+                sys.stdout.write("???\t{0}\n".format(prefix + os.path.basename(f)))
             elif self.totonly:
                 pass
             else:
-                print "{0:>12} {1}".format("???", prefix + os.path.basename(f))
+                sys.stdout.write("{0:>12} {1}\n".format("???", prefix + os.path.basename(f)))
             return 0
 
     def run(self, files, prefix, top=False):
