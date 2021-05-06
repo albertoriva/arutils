@@ -1,0 +1,45 @@
+#!/usr/bin/python
+
+import sys
+
+class Perc(object):
+  fmt = "{:.2f}%\n"
+  args = []
+
+  def parseArgs(self, args):
+    prev = None
+    for a in args:
+      if prev == "-d":
+        self.fmt = "{:." + a + "f}%\n"
+        prev = ""
+      elif a in ["-d"]:
+        prev = a
+      else:
+        self.args.append(a)
+
+  def run(self):
+    if len(self.args) == 2:
+      a = float(self.args[0])
+      b = float(self.args[1])
+      if b != 0:
+        sys.stdout.write(self.fmt.format(100.0*a/b))
+      else:
+        sys.stdout.write("N/A\n")
+    elif len(self.args) == 1:
+      a = float(self.args[0])
+      sys.stdout.write(self.fmt.format(100.0*a))
+    else:
+      for line in sys.stdin:
+        parts = line.split("\t")
+        a = float(parts[0])
+        b = float(parts[1])
+        if b != 0:
+          sys.stdout.write(self.fmt.format(100.0*a/b))
+        else:
+          sys.stdout.write("N/A\n")
+
+if __name__ == "__main__":
+  P = Perc()
+  P.parseArgs(sys.argv[1:])
+  P.run()
+
