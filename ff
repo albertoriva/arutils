@@ -1,0 +1,65 @@
+#!/bin/bash
+
+#set -x
+
+DIRS=""
+PATTS=""
+OTHER=""
+NAME="-name"
+
+for arg in $*;
+do
+  C=${arg:0:1}
+  case $C in
+      /|.)
+	  DIRS="$DIRS $arg"
+	  ;;
+      -)
+	  case $arg in 
+	      -d)
+		  OTHER="$OTHER -type d"
+		  ;;
+	      -l)
+		  OTHER="$OTHER -type l"
+		  ;;
+	      -i)
+		  NAME="-iname"
+		  ;;
+	  esac
+	  ;;
+      *)
+	  arg=${arg//@/\*}
+	  PATTS="$PATTS $arg"
+	  ;;
+  esac
+done
+
+if [[ -z $PATTS ]];
+then
+  echo "ff - fast find"
+  echo
+  echo "Usage: ff [-i] [-d] [-l] [directory] pattern"
+  echo 
+  echo "An argument starting with / or . is interpreted as a directory, otherwise as a pattern."
+  echo "Directory defaults to the current directory. @ characters in pattern are replaced with *."
+  echo
+  echo "Options:"
+  echo
+  echo "-i   | Case insensitive"
+  echo "-d   | Find directories"
+  echo "-l   | Find symlinks"
+  echo
+  exit 1
+fi
+
+if [[ -z $DIRS ]];
+then
+  DIRS="."
+fi
+
+set -f
+for dir in $DIRS; do
+  for patt in $PATTS; do
+    find $dir $OTHER $NAME $patt
+  done
+done
