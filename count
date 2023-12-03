@@ -4,9 +4,21 @@ import sys
 
 argc = len(sys.argv)
 
+def count_stdin():
+    n = 0
+    sys.stdout.write("{}".format(n))
+    for line in sys.stdin:
+        n += 1
+        if n % 100 == 0:
+            sys.stdout.write("\r{}".format(n))
+    sys.stdout.write("\r{}\n".format(n))
+
 if argc == 1:
     sys.stdout.write("0\n")
-elif argc == 2 and "*" in sys.argv[1]:
-    sys.stdout.write("0\n")
+elif argc == 2:
+    if sys.argv[1] == "-i":
+        count_stdin()
+    elif "*" in sys.argv[1]:
+        sys.stdout.write("0\n")
 else:
     sys.stdout.write("{}\n".format(argc - 1))
