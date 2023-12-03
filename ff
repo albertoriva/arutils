@@ -16,6 +16,22 @@ do
 	  ;;
       -)
 	  case $arg in 
+	      -h)
+		  echo "ff - fast find"
+		  echo
+		  echo "Usage: ff [-i] [-d] [-l] [directory] pattern"
+		  echo 
+		  echo "An argument starting with / or . is interpreted as a directory, otherwise as a pattern."
+		  echo "Directory defaults to the current directory. @ characters in pattern are replaced with *."
+		  echo
+		  echo "Options:"
+		  echo
+		  echo "-i   | Case insensitive"
+		  echo "-d   | Find directories instead of files"
+		  echo "-l   | Find symlinks instead of files"
+		  echo
+		  exit 1
+		  ;;
 	      -d)
 		  OTHER="$OTHER -type d"
 		  ;;
@@ -36,20 +52,7 @@ done
 
 if [[ -z $PATTS ]];
 then
-  echo "ff - fast find"
-  echo
-  echo "Usage: ff [-i] [-d] [-l] [directory] pattern"
-  echo 
-  echo "An argument starting with / or . is interpreted as a directory, otherwise as a pattern."
-  echo "Directory defaults to the current directory. @ characters in pattern are replaced with *."
-  echo
-  echo "Options:"
-  echo
-  echo "-i   | Case insensitive"
-  echo "-d   | Find directories"
-  echo "-l   | Find symlinks"
-  echo
-  exit 1
+  PATTS="*"
 fi
 
 if [[ -z $DIRS ]];

@@ -38,7 +38,7 @@ class Renamer(object):
 
     def run(self):
         for src in self.files:
-            if not self.dry and not os.path.isfile(src):
+            if not self.dry and not (os.path.isfile(src) or os.path.isdir(src)):
                 sys.stderr.write("Error: file `{}' does not exist.\n".format(src))
                 continue
             (path, filename) = os.path.split(src)
